@@ -39,4 +39,48 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapGet("/api/materials", (LoncotesLibraryDbContext db, int? materialTypeId, int? genreId) =>
+{
+    var query = db.Materials
+    .Where(m => m.OutOfCirculationSince == null);
+
+    if (materialTypeId.HasValue)
+    {
+        query = query.Where(m => m.MaterialTypeId == materialTypeId);
+    }
+
+    if (genreId.HasValue)
+    {
+        query = query.Where(m => m.Genre.Id == genreId);
+    }
+
+    return query
+    .Include(m => m.Genre)
+    .Include(m => m.MaterialType)
+    .ToList();
+});
+
+app.MapGet("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    Material foundMaterial = db.Materials
+    .Include(m => m.Genre)
+    .Include(m => m.MaterialType)
+    .Include(m => m.Checkouts)
+    .ThenInclude(c => c.Patron)
+    .SingleOrDefault(m => m.Id == id);
+
+    if (foundMaterial == null)
+    {
+        return Results.NotFound();
+    }
+    return Results.Ok(foundMaterial);
+});
+
+app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =>
+{
+    db.Materials.Add(material);
+    db.SaveChanges();
+    return Results.Created($"/api/materials/{material.Id}", material);
+});
+
 app.Run();
