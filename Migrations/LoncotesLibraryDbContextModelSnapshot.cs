@@ -334,7 +334,7 @@ namespace LoncotesLibrary.Migrations
                         .IsRequired();
 
                     b.HasOne("LoncotesLibrary.Models.Patron", "Patron")
-                        .WithMany()
+                        .WithMany("Checkouts")
                         .HasForeignKey("PatronId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -364,6 +364,11 @@ namespace LoncotesLibrary.Migrations
                 });
 
             modelBuilder.Entity("LoncotesLibrary.Models.Material", b =>
+                {
+                    b.Navigation("Checkouts");
+                });
+
+            modelBuilder.Entity("LoncotesLibrary.Models.Patron", b =>
                 {
                     b.Navigation("Checkouts");
                 });

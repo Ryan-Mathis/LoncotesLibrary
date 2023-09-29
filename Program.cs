@@ -2,6 +2,7 @@ using LoncotesLibrary.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -81,6 +82,110 @@ app.MapPost("/api/materials", (LoncotesLibraryDbContext db, Material material) =
     db.Materials.Add(material);
     db.SaveChanges();
     return Results.Created($"/api/materials/{material.Id}", material);
+});
+
+// app.MapDelete("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
+// {
+//     Material materialToDelete = db.Materials.SingleOrDefault(m => m.Id == id);
+//     if (materialToDelete == null)
+//     {
+//         return Results.NotFound();
+//     }
+//     db.Materials.Remove(materialToDelete);
+//     db.SaveChanges();
+//     return Results.NoContent();
+// });
+// supposed to do a soft delete dummy
+
+app.MapPut("/api/materials/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    Material materialToRemoveFromCirculation = db.Materials.SingleOrDefault(m => m.Id == id);
+    if (materialToRemoveFromCirculation == null)
+    {
+        return Results.NotFound();
+    }
+    DateTime now = DateTime.Now;
+    materialToRemoveFromCirculation.OutOfCirculationSince = now;
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+app.MapGet("/api/materialTypes", (LoncotesLibraryDbContext db) =>
+{
+    return db.MaterialTypes.ToList();
+});
+
+app.MapGet("/api/genres", (LoncotesLibraryDbContext db) =>
+{
+    return db.Genres.ToList();
+});
+
+app.MapGet("/api/patrons", (LoncotesLibraryDbContext db) =>
+{
+    return db.Patrons.ToList();
+});
+
+app.MapGet("api/patrons/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    return db.Patrons
+    .Include(p => p.Checkouts)
+    .ThenInclude(c => c.Material)
+    .ThenInclude(m => m.MaterialType)
+    .SingleOrDefault(p => p.Id == id);
+});
+
+app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron patron) =>
+{
+    Patron patronToUpdate = db.Patrons.SingleOrDefault(p => p.Id == id);
+    if (patronToUpdate == null)
+    {
+        return Results.NotFound();
+    }
+    if (patron.Address != null)
+    {
+    patronToUpdate.Address = patron.Address;
+    }
+    if (patron.Email != null)
+    {
+    patronToUpdate.Email = patron.Email;
+    }
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    Patron patronToDeactivate = db.Patrons.SingleOrDefault(p => p.Id == id);
+    if (patronToDeactivate == null)
+    {
+        return Results.NotFound();
+    }
+    patronToDeactivate.IsActive = false;
+
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+app.MapPost("/api/checkout", (LoncotesLibraryDbContext db, Checkout checkout) =>
+{
+    DateTime now = DateTime.Now;
+    checkout.CheckoutDate = now;
+    db.Checkouts.Add(checkout);
+    Material checkedOutMaterial = db.Materials.SingleOrDefault(m => m.Id == checkout.MaterialId);
+    if (checkedOutMaterial == null)
+    {
+        return Results.NotFound();
+    }
+    checkedOutMaterial.Checkouts.Add(checkout);
+    Patron patronCheckingOut = db.Patrons.SingleOrDefault(p => p.Id == checkout.PatronId);
+    if (patronCheckingOut == null)
+    {
+        return Results.NotFound();
+    }
+    patronCheckingOut.Checkouts.Add(checkout);
+    db.SaveChanges();
+    return Results.NoContent();
 });
 
 app.Run();
