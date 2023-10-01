@@ -167,10 +167,10 @@ app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id) =>
     return Results.NoContent();
 });
 
-app.MapPost("/api/checkout", (LoncotesLibraryDbContext db, Checkout checkout) =>
+app.MapPost("/api/checkouts", (LoncotesLibraryDbContext db, Checkout checkout) =>
 {
-    DateTime now = DateTime.Now;
-    checkout.CheckoutDate = now;
+    DateTime today = DateTime.Today;
+    checkout.CheckoutDate = today;
     db.Checkouts.Add(checkout);
     Material checkedOutMaterial = db.Materials.SingleOrDefault(m => m.Id == checkout.MaterialId);
     if (checkedOutMaterial == null)
@@ -186,6 +186,40 @@ app.MapPost("/api/checkout", (LoncotesLibraryDbContext db, Checkout checkout) =>
     patronCheckingOut.Checkouts.Add(checkout);
     db.SaveChanges();
     return Results.NoContent();
+});
+
+app.MapPut("/api/checkouts/return/{id}", (LoncotesLibraryDbContext db, int id) =>
+{
+    Checkout checkoutToBeReturned = db.Checkouts.SingleOrDefault(c => c.Id == id);
+    if(checkoutToBeReturned == null)
+    {
+        return Results.NotFound();
+    }
+    DateTime today = DateTime.Today;
+    checkoutToBeReturned.ReturnDate = today;
+    db.SaveChanges();
+    return Results.NoContent();
+});
+
+app.MapGet("/api/materials/available", (LoncotesLibraryDbContext db) =>
+{
+    return db.Materials
+    .Where(m => m.OutOfCirculationSince == null)
+    .Where(m => m.Checkouts.All(co => co.ReturnDate != null))
+    .ToList();
+});
+
+app.MapGet("/api/checkouts/overdue", (LoncotesLibraryDbContext db) =>
+{
+    return db.Checkouts
+    .Include(p => p.Patron)
+    .Include(co => co.Material)
+    .ThenInclude(m => m.MaterialType)
+    .Where(co =>
+    (DateTime.Today - co.CheckoutDate).Days >
+    co.Material.MaterialType.CheckoutDays &&
+    co.ReturnDate == null)
+    .ToList();
 });
 
 app.Run();
