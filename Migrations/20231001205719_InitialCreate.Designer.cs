@@ -11,7 +11,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LoncotesLibrary.Migrations
 {
     [DbContext(typeof(LoncotesLibraryDbContext))]
-    [Migration("20230929190153_InitialCreate")]
+    [Migration("20231001205719_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,6 +37,9 @@ namespace LoncotesLibrary.Migrations
                     b.Property<int>("MaterialId")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("Paid")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("PatronId")
                         .HasColumnType("integer");
 
@@ -57,6 +60,7 @@ namespace LoncotesLibrary.Migrations
                             Id = 1,
                             CheckoutDate = new DateTime(2023, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             MaterialId = 5,
+                            Paid = false,
                             PatronId = 1,
                             ReturnDate = new DateTime(2023, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified)
                         },
@@ -65,6 +69,7 @@ namespace LoncotesLibrary.Migrations
                             Id = 2,
                             CheckoutDate = new DateTime(2023, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             MaterialId = 12,
+                            Paid = false,
                             PatronId = 2
                         });
                 });

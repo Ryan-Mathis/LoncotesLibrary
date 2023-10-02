@@ -151,10 +151,10 @@ app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id, Patron pat
     }
 
     db.SaveChanges();
-    return Results.NoContent();
+    return Results.Ok(patron);
 });
 
-app.MapPut("/api/patrons/{id}", (LoncotesLibraryDbContext db, int id) =>
+app.MapPut("/api/patrons/{id}/deactivate", (LoncotesLibraryDbContext db, int id) =>
 {
     Patron patronToDeactivate = db.Patrons.SingleOrDefault(p => p.Id == id);
     if (patronToDeactivate == null)
@@ -219,6 +219,16 @@ app.MapGet("/api/checkouts/overdue", (LoncotesLibraryDbContext db) =>
     (DateTime.Today - co.CheckoutDate).Days >
     co.Material.MaterialType.CheckoutDays &&
     co.ReturnDate == null)
+    .ToList();
+});
+
+app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
+{
+    return db.Checkouts
+    .Include(p => p.Patron)
+    .Include(co => co.Material)
+    .ThenInclude(m => m.MaterialType)
+    .Where(co => co.ReturnDate == null)
     .ToList();
 });
 

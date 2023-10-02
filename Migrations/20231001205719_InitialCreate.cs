@@ -91,7 +91,8 @@ namespace LoncotesLibrary.Migrations
                     MaterialId = table.Column<int>(type: "integer", nullable: false),
                     PatronId = table.Column<int>(type: "integer", nullable: false),
                     CheckoutDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
-                    ReturnDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
+                    ReturnDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    Paid = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -163,11 +164,11 @@ namespace LoncotesLibrary.Migrations
 
             migrationBuilder.InsertData(
                 table: "Checkouts",
-                columns: new[] { "Id", "CheckoutDate", "MaterialId", "PatronId", "ReturnDate" },
+                columns: new[] { "Id", "CheckoutDate", "MaterialId", "Paid", "PatronId", "ReturnDate" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2023, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, 1, new DateTime(2023, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified) },
-                    { 2, new DateTime(2023, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), 12, 2, null }
+                    { 1, new DateTime(2023, 8, 23, 0, 0, 0, 0, DateTimeKind.Unspecified), 5, false, 1, new DateTime(2023, 8, 29, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 2, new DateTime(2023, 9, 27, 0, 0, 0, 0, DateTimeKind.Unspecified), 12, false, 2, null }
                 });
 
             migrationBuilder.CreateIndex(
