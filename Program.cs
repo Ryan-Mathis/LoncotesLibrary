@@ -206,6 +206,8 @@ app.MapGet("/api/materials/available", (LoncotesLibraryDbContext db) =>
     return db.Materials
     .Where(m => m.OutOfCirculationSince == null)
     .Where(m => m.Checkouts.All(co => co.ReturnDate != null))
+    .Include(m => m.Genre)
+    .Include(m => m.MaterialType)
     .ToList();
 });
 
@@ -228,7 +230,6 @@ app.MapGet("/api/checkouts", (LoncotesLibraryDbContext db) =>
     .Include(p => p.Patron)
     .Include(co => co.Material)
     .ThenInclude(m => m.MaterialType)
-    .Where(co => co.ReturnDate == null)
     .ToList();
 });
 
